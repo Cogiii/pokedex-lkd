@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from "next/image";
 
+import Logo from '../public/pokemon-logo.png';
+
 interface Pokemon {
   id: number;
   name: string;
@@ -37,24 +39,24 @@ interface Evolution {
 }
 
 const typeColors: Record<string, string> = {
-  normal: 'bg-gray-400',
-  fire: 'bg-red-500',
-  water: 'bg-blue-500',
-  electric: 'bg-yellow-400',
-  grass: 'bg-green-500',
-  ice: 'bg-blue-300',
-  fighting: 'bg-red-700',
-  poison: 'bg-purple-500',
-  ground: 'bg-yellow-600',
-  flying: 'bg-indigo-400',
-  psychic: 'bg-pink-500',
-  bug: 'bg-green-400',
-  rock: 'bg-yellow-800',
-  ghost: 'bg-purple-700',
-  dragon: 'bg-indigo-700',
-  dark: 'bg-gray-800',
-  steel: 'bg-gray-500',
-  fairy: 'bg-pink-300',
+  normal: 'bg-gray-500',
+  fire: 'bg-red-600',
+  water: 'bg-blue-600',
+  electric: 'bg-yellow-500',
+  grass: 'bg-green-600',
+  ice: 'bg-blue-400',
+  fighting: 'bg-red-800',
+  poison: 'bg-purple-600',
+  ground: 'bg-yellow-700',
+  flying: 'bg-indigo-500',
+  psychic: 'bg-pink-600',
+  bug: 'bg-green-600',
+  rock: 'bg-yellow-900',
+  ghost: 'bg-purple-800',
+  dragon: 'bg-indigo-800',
+  dark: 'bg-gray-900',
+  steel: 'bg-gray-600',
+  fairy: 'bg-pink-400',
 };
 
 export default function Pokedex() {
@@ -82,11 +84,18 @@ export default function Pokedex() {
   }, [searchTerm, pokemonList]);
 
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !loadingMore && hasMore) {
-        fetchPokemonList();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingMore && hasMore) {
+          fetchPokemonList();
+        }
+      },
+      {
+        root: null,
+        threshold: 1,
+        rootMargin: "0px 0px 300px 0px",
       }
-    });
+    );
 
     if (loader.current) observer.observe(loader.current);
 
@@ -184,8 +193,9 @@ export default function Pokedex() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-2xl font-bold">Loading Pokédex...</div>
+      <div className="flex flex-col min-h-screen flex items-center justify-center bg-white">
+        <Image src={Logo} alt="Pokemon Logo" width={200} height={200} className='animate-spin' />
+        <div className="text-2xl font-bold text-black">Loading Pokédex...</div>
       </div>
     );
   }
@@ -237,7 +247,7 @@ export default function Pokedex() {
                     alt={pokemon.name}
                     width={100}
                     height={100}
-                    className="object-contain absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-12 z-10 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-14"
+                    className="h-[100px] object-contain absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-12 z-10 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-14"
                   />
                   <div
                     className="w-full bg-white rounded-lg shadow-md p-4 pt-10 border-2 flex flex-col items-center justify-center relative transition-all duration-300 group-hover:shadow-xl group-hover:border-red-400"
@@ -250,7 +260,7 @@ export default function Pokedex() {
                         {pokemon.types.map((type, index) => (
                           <span
                             key={index}
-                            className={`px-2 py-1 rounded-full text-white text-sm font-medium 
+                            className={`px-2 py-1 rounded-lg text-white text-sm font-medium 
                                       ${typeColors[type.type.name] || 'bg-gray-400'}
                                       transition-transform duration-300 group-hover:scale-105`}
                           >
@@ -268,28 +278,29 @@ export default function Pokedex() {
 
           {/* Pokemon Details */}
           {selectedPokemon && (
-            <div className="lg:w-1/3">
-              <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="lg:w-1/3 sticky top-35 self-start bg-white rounded-t-4xl shadow-lg p-6 pt-20 flex flex-col h-[100vh]">
+              <Image
+                src={fetchPokemonGif(selectedPokemon)}
+                alt={selectedPokemon.name}
+                height={120}
+                width={120}
+                unoptimized
+                className="absolute -top-10 left-1/3 mx-auto object-contain h-[120px]"
+              />
+              <div className="overflow-y-scroll no-scrollbar h-[65vh]">
                 <div className="text-center mb-6">
-                  <Image
-                    src={fetchPokemonGif(selectedPokemon)}
-                    alt={selectedPokemon.name}
-                    width={120}
-                    height={120}
-                    unoptimized
-                    className="mx-auto object-contain"
-                  />
-                  <h2 className="text-3xl font-bold capitalize text-gray-800 mt-4">
-                    #{selectedPokemon.id.toString().padStart(3, '0')} {selectedPokemon.name}
+                  <h2 className="text-3xl font-bold capitalize text-gray-800 mt-1">
+                    {selectedPokemon.name}
                   </h2>
+                  <p className='text-black'>ID: {selectedPokemon.id.toString().padStart(3, '0')}</p>
                   <div className="flex justify-center space-x-2 mt-2">
                     {selectedPokemon.types.map((type, index) => (
                       <span
                         key={index}
-                        className={`px-3 py-1 rounded-full text-white font-medium ${typeColors[type.type.name] || 'bg-gray-400'
+                        className={`px-3 py-1 rounded-lg text-white font-medium ${typeColors[type.type.name] || 'bg-gray-400'
                           }`}
                       >
-                        {type.type.name}
+                        {type.type.name.charAt(0).toUpperCase() + type.type.name.slice(1)}
                       </span>
                     ))}
                   </div>
@@ -299,11 +310,11 @@ export default function Pokedex() {
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="text-center">
                     <p className="text-gray-600">Height</p>
-                    <p className="text-xl font-bold text-gray-800">{selectedPokemon.height / 10} m</p>
+                    <p className="text-l font-bold text-gray-800">{selectedPokemon.height / 10} m</p>
                   </div>
                   <div className="text-center">
                     <p className="text-gray-600">Weight</p>
-                    <p className="text-xl font-bold text-gray-800">{selectedPokemon.weight / 10} kg</p>
+                    <p className="text-l font-bold text-gray-800">{selectedPokemon.weight / 10} kg</p>
                   </div>
                 </div>
 
