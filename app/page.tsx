@@ -1,103 +1,380 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
 import Image from "next/image";
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+interface Pokemon {
+  id: number;
+  name: string;
+  types: { type: { name: string } }[];
+  sprites: {
+    front_default: string;
+    other: {
+      'official-artwork': {
+        front_default: string;
+      };
+    };
+  };
+  height: number;
+  weight: number;
+  stats: { base_stat: number; stat: { name: string } }[];
+  abilities: { ability: { name: string } }[];
+  species: {
+    evolution_chain: {
+      url: string;
+    };
+  };
+}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+interface PokemonListItem {
+  name: string;
+  url: string;
+}
+
+interface Evolution {
+  name: string;
+  id: number;
+}
+
+const typeColors: Record<string, string> = {
+  normal: 'bg-gray-400',
+  fire: 'bg-red-500',
+  water: 'bg-blue-500',
+  electric: 'bg-yellow-400',
+  grass: 'bg-green-500',
+  ice: 'bg-blue-300',
+  fighting: 'bg-red-700',
+  poison: 'bg-purple-500',
+  ground: 'bg-yellow-600',
+  flying: 'bg-indigo-400',
+  psychic: 'bg-pink-500',
+  bug: 'bg-green-400',
+  rock: 'bg-yellow-800',
+  ghost: 'bg-purple-700',
+  dragon: 'bg-indigo-700',
+  dark: 'bg-gray-800',
+  steel: 'bg-gray-500',
+  fairy: 'bg-pink-300',
+};
+
+export default function Pokedex() {
+  const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
+  const [filteredPokemon, setFilteredPokemon] = useState<Pokemon[]>([]);
+  const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [pokemonEvolutions, setPokemonEvolutions] = useState<Evolution[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const loader = useRef<HTMLDivElement | null>(null);
+  const [isHoveredPokemonId, setIsHoveredPokemonId] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchPokemonList();
+  }, []);
+
+  useEffect(() => {
+    const filtered = pokemonList.filter(pokemon =>
+      pokemon.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pokemon.types.some(type => type.type.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    setFilteredPokemon(filtered);
+  }, [searchTerm, pokemonList]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !loadingMore && hasMore) {
+        fetchPokemonList();
+      }
+    });
+
+    if (loader.current) observer.observe(loader.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [loadingMore, hasMore]);
+
+  const fetchPokemonList = async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+
+    try {
+      const response = await fetch(
+        `https://pokeapi.co/api/v2/pokemon?limit=20&offset=${pokemonList.length}`
+      );
+      const data = await response.json();
+
+      if (data.results.length === 0) {
+        setHasMore(false);
+        return;
+      }
+
+      const pokemonDetails = await Promise.all(
+        data.results.map(async (pokemon: PokemonListItem) => {
+          const pokemonResponse = await fetch(pokemon.url);
+          return await pokemonResponse.json();
+        })
+      );
+
+      setPokemonList((prev) => [...prev, ...pokemonDetails]);
+    } catch (error) {
+      console.error("Error fetching Pokemon:", error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  function fetchPokemonGif(pokemon: any) {
+    return (
+      pokemon.sprites?.versions?.['generation-v']?.['black-white']?.animated?.front_default ||
+      pokemon.sprites?.front_default
+    );
+  }
+
+  const fetchEvolutionChain = async (pokemon: Pokemon) => {
+    try {
+      const speciesResponse = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemon.id}`);
+      const speciesData = await speciesResponse.json();
+
+      const evolutionResponse = await fetch(speciesData.evolution_chain.url);
+      const evolutionData = await evolutionResponse.json();
+
+      const evolutions: Evolution[] = [];
+
+      const extractEvolutions = (chain: any) => {
+        const id = parseInt(chain.species.url.split('/')[6]);
+        evolutions.push({
+          name: chain.species.name,
+          id: id
+        });
+
+        if (chain.evolves_to.length > 0) {
+          chain.evolves_to.forEach((evolution: any) => {
+            extractEvolutions(evolution);
+          });
+        }
+      };
+
+      extractEvolutions(evolutionData.chain);
+      setPokemonEvolutions(evolutions);
+    } catch (error) {
+      console.error('Error fetching evolution chain:', error);
+      setPokemonEvolutions([]);
+    }
+  };
+
+  const handlePokemonClick = (pokemon: Pokemon) => {
+    setSelectedPokemon(pokemon);
+    fetchEvolutionChain(pokemon);
+  };
+
+  const formatStatName = (statName: string) => {
+    const statNames: Record<string, string> = {
+      'hp': 'HP',
+      'attack': 'Attack',
+      'defense': 'Defense',
+      'special-attack': 'Sp. Attack',
+      'special-defense': 'Sp. Defense',
+      'speed': 'Speed'
+    };
+    return statNames[statName] || statName;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl font-bold">Loading Pokédex...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="flex justify-between bg-red-600 text-white p-4 px-10 shadow-lg">
+        <div className='flex gap-4 items-center'>
+          <img src="/pokemon-logo.png" alt="" className='w-12' />
+          <h1 className="text-2xl font-bold text-center">Pokédex</h1>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
+
+        <a href="https://github.com/Cogiii/pokedex-lkd" target="_blank" rel="noopener noreferrer" className="self-center">
+          GitHub
         </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </header>
+
+      <div className="container mx-auto p-10 px-4 md:px-10 lg:px-30">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Pokemon List */}
+          <div className={`${selectedPokemon ? 'lg:w-2/2' : 'w-full'}`}>
+            {/* Search Bar */}
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Search Pokémon by name or type..."
+                className="w-full p-3 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-red-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <h2 className="text-2xl font-bold mb-4 text-gray-800">Pokémon List</h2>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-4 gap-y-20 pt-5">
+              {filteredPokemon.map((pokemon) => (
+                <div
+                  key={pokemon.id}
+                  className="group flex flex-col items-center justify-center relative cursor-pointer"
+                  onClick={() => handlePokemonClick(pokemon)}
+                  onMouseEnter={() => setIsHoveredPokemonId(pokemon.id)}
+                  onMouseLeave={() => setIsHoveredPokemonId(null)}
+                >
+                  <Image
+                    src={
+                      isHoveredPokemonId === pokemon.id
+                        ? fetchPokemonGif(pokemon)
+                        : pokemon.sprites.front_default
+                    }
+                    alt={pokemon.name}
+                    width={100}
+                    height={100}
+                    className="object-contain absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-12 z-10 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-14"
+                  />
+                  <div
+                    className="w-full bg-white rounded-lg shadow-md p-4 pt-10 border-2 flex flex-col items-center justify-center relative transition-all duration-300 group-hover:shadow-xl group-hover:border-red-400"
+                  >
+                    <div>
+                      <h3 className="font-bold text-lg text-center capitalize text-gray-800 group-hover:text-red-500 transition-all duration-300 group-hover:text-xl">
+                        {pokemon.name}
+                      </h3>
+                      <div className="flex justify-center space-x-2 mt-2">
+                        {pokemon.types.map((type, index) => (
+                          <span
+                            key={index}
+                            className={`px-2 py-1 rounded-full text-white text-sm font-medium 
+                                      ${typeColors[type.type.name] || 'bg-gray-400'}
+                                      transition-transform duration-300 group-hover:scale-105`}
+                          >
+                            {type.type.name.charAt(0).toUpperCase() + type.type.name.slice(1)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div ref={loader} className="h-10" />
+            </div>
+          </div>
+
+          {/* Pokemon Details */}
+          {selectedPokemon && (
+            <div className="lg:w-1/3">
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <div className="text-center mb-6">
+                  <Image
+                    src={fetchPokemonGif(selectedPokemon)}
+                    alt={selectedPokemon.name}
+                    width={120}
+                    height={120}
+                    unoptimized
+                    className="mx-auto object-contain"
+                  />
+                  <h2 className="text-3xl font-bold capitalize text-gray-800 mt-4">
+                    #{selectedPokemon.id.toString().padStart(3, '0')} {selectedPokemon.name}
+                  </h2>
+                  <div className="flex justify-center space-x-2 mt-2">
+                    {selectedPokemon.types.map((type, index) => (
+                      <span
+                        key={index}
+                        className={`px-3 py-1 rounded-full text-white font-medium ${typeColors[type.type.name] || 'bg-gray-400'
+                          }`}
+                      >
+                        {type.type.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Basic Info */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="text-center">
+                    <p className="text-gray-600">Height</p>
+                    <p className="text-xl font-bold text-gray-800">{selectedPokemon.height / 10} m</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-gray-600">Weight</p>
+                    <p className="text-xl font-bold text-gray-800">{selectedPokemon.weight / 10} kg</p>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold mb-3 text-gray-800">Base Stats</h3>
+                  <div className="space-y-2">
+                    {selectedPokemon.stats.map((stat, index) => (
+                      <div key={index} className="flex items-center">
+                        <div className="w-20 text-sm font-medium text-gray-600">
+                          {formatStatName(stat.stat.name)}
+                        </div>
+                        <div className="w-12 text-sm font-bold text-gray-800">
+                          {stat.base_stat}
+                        </div>
+                        <div className="flex-1 bg-gray-200 rounded-full h-2 ml-2">
+                          <div
+                            className="bg-red-500 h-2 rounded-full"
+                            style={{ width: `${(stat.base_stat / 255) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Abilities */}
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold mb-3 text-gray-800">Abilities</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedPokemon.abilities.map((ability, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium capitalize"
+                      >
+                        {ability.ability.name.replace('-', ' ')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Evolution Chain */}
+                {pokemonEvolutions.length > 1 && (
+                  <div>
+                    <h3 className="text-xl font-bold mb-3 text-gray-800">Evolution Chain</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {pokemonEvolutions.map((evolution, index) => (
+                        <div
+                          key={index}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium capitalize cursor-pointer transition-colors ${evolution.id === selectedPokemon.id
+                            ? 'bg-red-500 text-white'
+                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                            }`}
+                          onClick={() => {
+                            const evolutionPokemon = pokemonList.find(p => p.id === evolution.id);
+                            if (evolutionPokemon) {
+                              handlePokemonClick(evolutionPokemon);
+                            }
+                          }}
+                        >
+                          #{evolution.id.toString().padStart(3, '0')} {evolution.name}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
