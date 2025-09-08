@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from "next/image";
 
 import Logo from '../public/pokemon-logo.png';
@@ -278,7 +278,7 @@ export default function Pokedex() {
 
           {/* Pokemon Details */}
           {selectedPokemon && (
-            <div className="lg:w-1/3 sticky top-35 self-start bg-white rounded-t-4xl shadow-lg p-6 pt-20 flex flex-col h-[100vh]">
+            <div className="md:w-[400px] lg:w-[400px] sticky top-35 self-start bg-white rounded-t-4xl shadow-lg p-6 pt-20 flex flex-col h-[100vh]">
               <Image
                 src={fetchPokemonGif(selectedPokemon)}
                 alt={selectedPokemon.name}
@@ -360,24 +360,50 @@ export default function Pokedex() {
                 {pokemonEvolutions.length > 1 && (
                   <div>
                     <h3 className="text-xl font-bold mb-3 text-gray-800">Evolution Chain</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {pokemonEvolutions.map((evolution, index) => (
-                        <div
-                          key={index}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium capitalize cursor-pointer transition-colors ${evolution.id === selectedPokemon.id
-                            ? 'bg-red-500 text-white'
-                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                            }`}
-                          onClick={() => {
-                            const evolutionPokemon = pokemonList.find(p => p.id === evolution.id);
-                            if (evolutionPokemon) {
-                              handlePokemonClick(evolutionPokemon);
-                            }
-                          }}
-                        >
-                          #{evolution.id.toString().padStart(3, '0')} {evolution.name}
-                        </div>
-                      ))}
+                    <div className="flex items-center flex-wrap gap-2">
+                      {pokemonEvolutions.map((evolution, index) => {
+                        const evolutionPokemon = pokemonList.find(p => p.id === evolution.id);
+
+                        return (
+                          <React.Fragment key={index}>
+                            {/* Evolution Item */}
+                            <div
+                              className="flex flex-col ml-1 items-center cursor-pointer transition-transform hover:scale-105"
+                              onClick={() => evolutionPokemon && handlePokemonClick(evolutionPokemon)}
+                            >
+                              {evolutionPokemon?.sprites?.front_default ? (
+                                <Image
+                                  src={evolutionPokemon.sprites.front_default}
+                                  alt={evolution.name}
+                                  width={50}
+                                  height={50}
+                                  className={`object-contain w-[100%] mb-1 ${evolution.id === selectedPokemon.id ? 'ring-4 ring-red-500 rounded-full' : ''
+                                    }`}
+                                />
+                              ) : (
+                                <div
+                                  className={`flex items-center justify-center w-10 h-10 ml-2 mb-1 bg-gray-200 text-gray-600 text-lg font-bold rounded-full ${evolution.id === selectedPokemon.id ? 'ring-4 ring-red-500' : ''
+                                    }`}
+                                >
+                                  ?
+                                </div>
+                              )}
+
+                              <span
+                                className={`capitalize text-[8px] font-medium ${evolution.id === selectedPokemon.id ? 'text-red-500 font-bold' : 'text-gray-800'
+                                  }`}
+                              >
+                                {evolution.name}
+                              </span>
+                            </div>
+
+                            {/* Arrow between evolutions */}
+                            {index < pokemonEvolutions.length - 1 && (
+                              <span className="text-gray-500 text-lg">→</span>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
