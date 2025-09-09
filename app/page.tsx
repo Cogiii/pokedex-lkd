@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Pokemon } from '../src/types/pokemon';
 import { API_CONFIG } from '../src/constants/pokemon';
 import { usePokemonList } from '../src/hooks/usePokemonList';
@@ -19,10 +19,10 @@ export default function Pokedex() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
   const [hoveredPokemonId, setHoveredPokemonId] = useState<number | null>(null);
-  const [totalPokemonFound, setTotalPokemonFound] = useState<number | null>(null);
+  const [isReset, setIsReset] = useState(false);
 
   // Custom hooks
-  const { pokemonList, loading, loadingMore, hasMore, loadMore } = usePokemonList();
+  const { pokemonList, loading, loadingMore, hasMore, loadMore, reset } = usePokemonList();
   const debouncedSearchTerm = useDebounce(searchTerm);
   const filteredPokemon = usePokemonSearch(pokemonList, debouncedSearchTerm);
   const { evolutions, fetchEvolutions } = usePokemonEvolutions();
@@ -60,7 +60,7 @@ export default function Pokedex() {
   }, []);
 
   // Intersection Observer logic
-  React.useEffect(() => {
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !loadingMore && hasMore) {
@@ -93,6 +93,14 @@ export default function Pokedex() {
       observer.disconnect();
     };
   }, [loadingMore, hasMore, debouncedSearchTerm, filteredPokemon.length, pokemonList.length, loadMore]);
+
+  useEffect(() => {
+    if(debouncedSearchTerm) return setIsReset(true);
+
+    if (!debouncedSearchTerm && isReset) {
+      reset();
+    }
+  }, [debouncedSearchTerm]);
 
   useKeyboardShortcuts({
     searchTerm,

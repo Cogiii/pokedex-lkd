@@ -1,4 +1,4 @@
-import React from 'react';
+import { use, useEffect, useState } from 'react';
 import { Pokemon } from '../../types/pokemon';
 import { PokemonCard } from './PokemonCard';
 
@@ -27,6 +27,18 @@ export const PokemonGrid: React.FC<PokemonGridProps> = ({
   searchTerm = '',
   loaderRef,
 }) => {
+  const [loadingState, setLoadingState] = useState(loading);
+  const [noPokemonFound, setNoPokemonFound] = useState(false);
+
+  useEffect(() => {
+    setLoadingState(hasMore || loadingMore);
+  }, [loading, hasMore]);
+
+  useEffect(() => {
+    // searchTerm && pokemon.length === 0 && !loadingMore &&
+    setNoPokemonFound( pokemon.length === 0 && !hasMore && !loadingMore);
+  }, [searchTerm, pokemon, loadingMore]);
+
   if (loading && pokemon.length === 0) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -52,21 +64,18 @@ export const PokemonGrid: React.FC<PokemonGridProps> = ({
       
       {/* Loader and Status Messages */}
       <div ref={loaderRef} className="flex justify-center items-center min-h-[60px]">
-        {loadingMore && (
+        {loadingState && (
           <div className="flex flex-col items-center p-4">
             {/* Loading Spinner */}
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mb-2"></div>
             <div className="text-gray-600 text-sm">
-              {searchTerm 
-                ? 'Loading more Pokémon to search...' 
-                : 'Loading more Pokémon...'
-              }
+              Loading Pokémon...
             </div>
           </div>
         )}
       </div>
       
-      {searchTerm && pokemon.length === 0 && !loadingMore && (
+      {noPokemonFound && (
         <div className="text-center p-8 text-gray-600">
           <div className="text-lg mb-2">No Pokémon found</div>
           <div className="text-sm">

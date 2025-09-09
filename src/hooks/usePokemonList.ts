@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Pokemon, PokemonListItem } from '../types/pokemon';
 import { fetchPokemonList, fetchPokemonDetails } from '../services/pokemonApi';
 
@@ -63,13 +63,11 @@ export const usePokemonList = (): UsePokemonListReturn => {
   }, [loadPokemon, loadingMore, hasMore, pokemonList.length]);
 
   const reset = useCallback(() => {
-    setPokemonList([]);
-    setLoading(true);
     setLoadingMore(false);
     setHasMore(true);
     setError(null);
-    loadPokemon(0, true);
-  }, [loadPokemon]);
+    setPokemonList(prev => prev.slice(0, 20));
+  }, []);
 
   useEffect(() => {
     loadPokemon(0, true);

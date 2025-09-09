@@ -1,6 +1,5 @@
 import { 
   Pokemon, 
-  PokemonListItem, 
   PokemonApiResponse, 
   EvolutionChainResponse, 
   PokemonSpecies,

@@ -37,7 +37,7 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({
 }) => {
   return (
     <div
-      className="max-w-[300px] group flex flex-col items-center justify-center relative cursor-pointer"
+      className="group flex flex-col items-center justify-center relative cursor-pointer"
       onClick={() => onClick(pokemon)}
       onMouseEnter={() => onMouseEnter?.(pokemon.id)}
       onMouseLeave={onMouseLeave}
