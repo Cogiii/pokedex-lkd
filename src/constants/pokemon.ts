@@ -30,6 +30,15 @@ export const STAT_NAMES: Record<string, string> = {
   'speed': 'Speed'
 };
 
+export const STAT_NAMES_SHORTCUTS: Record<string, string> = {
+  'hp': 'HP',
+  'attack': 'ATK',
+  'defense': 'DEF',
+  'special-attack': 'SA',
+  'special-defense': 'SpD',
+  'speed': 'SPD'
+};
+
 export const API_CONFIG = {
   BASE_URL: 'https://pokeapi.co/api/v2',
   ITEMS_PER_PAGE: 20,

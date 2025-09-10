@@ -21,6 +21,7 @@ export default function Pokedex() {
   const [hoveredPokemonId, setHoveredPokemonId] = useState<number | null>(null);
   const [isReset, setIsReset] = useState(false);
   const [loadingStateDetails, setLoadingStateDetails] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   // Custom hooks
   const { pokemonList, loading, loadingMore, hasMore, loadMore, reset } = usePokemonList();
@@ -42,6 +43,7 @@ export default function Pokedex() {
 
   const handlePokemonClick = useCallback(async (pokemon: Pokemon) => {
     setSelectedPokemon(pokemon);
+    setIsDetailsOpen(true);
     await fetchEvolutions(pokemon);
   }, [fetchEvolutions]);
 
@@ -96,7 +98,7 @@ export default function Pokedex() {
   }, [loadingMore, hasMore, debouncedSearchTerm, filteredPokemon.length, pokemonList.length, loadMore]);
 
   useEffect(() => {
-    if(debouncedSearchTerm) return setIsReset(true);
+    if (debouncedSearchTerm) return setIsReset(true);
 
     if (!debouncedSearchTerm && isReset) {
       reset();
@@ -161,10 +163,15 @@ export default function Pokedex() {
               pokemon={selectedPokemon}
               evolutions={evolutions}
               onEvolutionClick={handleEvolutionClick}
+              isDetailsOpen={isDetailsOpen}
+              setIsDetailsOpen={setIsDetailsOpen}
             />
           )}
         </div>
       </div>
+
+      {isDetailsOpen && selectedPokemon && <div className="fixed inset-0 bg-black bg-opacity-60 z-[10] lg:hidden opacity-70" />}
+
     </div >
   );
 }

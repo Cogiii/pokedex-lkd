@@ -1,8 +1,8 @@
-import { Fragment, FC } from 'react';
+import { useState, Fragment, FC } from 'react';
 import Image from 'next/image';
 import { Pokemon, Evolution } from '../../types/pokemon';
 import { PokemonTypeBadge } from './PokemonCard';
-import { STAT_NAMES } from '../../constants/pokemon';
+import { STAT_NAMES_SHORTCUTS } from '../../constants/pokemon';
 import {
   formatPokemonId,
   capitalize,
@@ -17,22 +17,29 @@ interface PokemonStatsProps {
 }
 
 const PokemonStats: FC<PokemonStatsProps> = ({ stats }) => (
-  <div className="mb-6">
+  <div className="mb-6 w-full max-w-sm mx-auto lg:max-w-none">
     <h3 className="text-xl font-bold mb-3 text-gray-800">Base Stats</h3>
-    <div className="space-y-2">
+    <div className="flex justify-center gap-3 lg:gap-4">
       {stats.map((stat, index) => (
-        <div key={index} className="flex items-center">
-          <div className="w-20 text-sm font-medium text-gray-600">
-            {STAT_NAMES[stat.stat.name] || capitalize(stat.stat.name)}
-          </div>
-          <div className="w-12 text-sm font-bold text-gray-800">
+        <div key={index} className="flex flex-col items-center">
+          {/* Stat value */}
+          <div className="text-xs lg:text-sm font-bold text-gray-800 mb-1">
             {stat.base_stat}
           </div>
-          <div className="flex-1 bg-gray-200 rounded-full h-2 ml-2">
+          
+          {/* Vertical Progress Bar */}
+          <div className="w-3 lg:w-3 h-20 lg:h-24 bg-gray-200 rounded-full relative flex items-end">
             <div
-              className="bg-red-500 h-2 rounded-full"
-              style={{ width: `${(stat.base_stat / 255) * 100}%` }}
+              className="w-full bg-red-500 rounded-full transition-all duration-700 ease-out"
+              style={{ height: `${(stat.base_stat / 255) * 100}%` }}
             />
+          </div>
+          
+          {/* Stat name */}
+          <div className="w-full text-xs lg:text-sm font-medium text-gray-600 text-center lg:text-left mt-2 max-w-[50px] lg:max-w-none">
+            <span className="block">
+              {STAT_NAMES_SHORTCUTS[stat.stat.name].slice(0,3)}
+            </span>
           </div>
         </div>
       ))}
@@ -47,7 +54,7 @@ interface PokemonAbilitiesProps {
 const PokemonAbilities: FC<PokemonAbilitiesProps> = ({ abilities }) => (
   <div className="mb-6">
     <h3 className="text-xl font-bold mb-3 text-gray-800">Abilities</h3>
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2 justify-center">
       {abilities.map((ability, index) => (
         <span
           key={index}
@@ -74,7 +81,7 @@ const PokemonEvolutions: FC<PokemonEvolutionsProps> = ({
   if (evolutions.length <= 1) return null;
 
   return (
-    <div>
+    <>
       <h3 className="text-xl font-bold mb-3 text-gray-800">Evolution Chain</h3>
       <div className="flex items-center flex-wrap gap-2">
         {evolutions.map((evolution, index) => {
@@ -119,7 +126,7 @@ const PokemonEvolutions: FC<PokemonEvolutionsProps> = ({
           );
         })}
       </div>
-    </div>
+    </>
   );
 };
 
@@ -127,34 +134,71 @@ interface PokemonDetailsProps {
   pokemon: Pokemon;
   evolutions: Evolution[];
   onEvolutionClick: (evolutionId: number) => void;
+  isDetailsOpen: boolean;
+  setIsDetailsOpen: (isOpen: boolean) => void;
 }
 
 export const PokemonDetails: FC<PokemonDetailsProps> = ({
   pokemon,
   evolutions,
   onEvolutionClick,
+  isDetailsOpen,
+  setIsDetailsOpen
 }) => {
+  const closePanel = () => setIsDetailsOpen(false);
+
   return (
-    <div className="w-[400px] sticky top-30 self-start bg-white rounded-t-4xl shadow-lg p-6 pt-20 flex flex-col h-[calc(100vh-7.5rem)]">
+    <div
+      className={`
+        w-full lg:w-[400px]
+        fixed lg:sticky
+        left-0
+        lg:top-30
+        bottom-0
+        z-50
+        self-start
+        bg-white
+        rounded-t-[40px] lg:rounded-t-[50px]
+        shadow-2xl
+        p-6 pt-20
+        flex flex-col
+        h-[calc(100vh-7.5rem)]
+        ${isDetailsOpen ? 'translate-y-0' : 'translate-y-[100vh] lg:translate-y-0'}
+      `}
+    >
+      {/* Close button (mobile only) */}
+      <button
+        onClick={closePanel}
+        className="absolute -top-5 right-3 lg:hidden text-white bg-black rounded-full w-12 h-12 flex items-center justify-center shadow-lg"
+      >
+        ✕
+      </button>
+
+      {/* Pokemon sprite */}
       <Image
         src={getPokemonSprite(pokemon)}
         alt={pokemon.name}
         height={100}
         width={100}
-        className="absolute top-[-50px] left-1/2 transform -translate-x-1/2 z-10"
+        className="absolute -top-12 left-1/2 -translate-x-1/2 z-10"
       />
 
-      <div className="flex flex-col overflow-y-auto no-scrollbar h-[70vh]">
+      {/* Scrollable content */}
+      <div className="flex flex-col overflow-y-auto no-scrollbar h-[70vh] items-center w-full text-center">
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold capitalize text-gray-800">
             {pokemon.name}
           </h2>
-          <p className='text-gray-600'>
+          <p className="text-gray-600">
             ID: {formatPokemonId(pokemon.id)}
           </p>
           <div className="flex justify-center space-x-2 mt-2">
             {pokemon.types.map((type, index) => (
-              <PokemonTypeBadge key={index} type={type.type.name} className="px-3 py-1" />
+              <PokemonTypeBadge
+                key={index}
+                type={type.type.name}
+                className="px-3 py-1"
+              />
             ))}
           </div>
         </div>
@@ -163,14 +207,18 @@ export const PokemonDetails: FC<PokemonDetailsProps> = ({
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="text-center">
             <p className="text-gray-600">Height</p>
-            <p className="text-xl font-bold text-gray-800">{convertHeight(pokemon.height)} m</p>
+            <p className="text-xl font-bold text-gray-800">
+              {convertHeight(pokemon.height)} m
+            </p>
           </div>
           <div className="text-center">
             <p className="text-gray-600">Weight</p>
-            <p className="text-xl font-bold text-gray-800">{convertWeight(pokemon.weight)} kg</p>
+            <p className="text-xl font-bold text-gray-800">
+              {convertWeight(pokemon.weight)} kg
+            </p>
           </div>
         </div>
-        
+
         <PokemonStats stats={pokemon.stats} />
         <PokemonAbilities abilities={pokemon.abilities} />
         <PokemonEvolutions
