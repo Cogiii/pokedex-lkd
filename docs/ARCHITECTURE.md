@@ -2,7 +2,7 @@
 
 This project follows modern React/Next.js best practices with a clean, maintainable folder structure.
 
-## 📁 Folder Structure
+## Folder Structure
 
 ```
 src/
@@ -17,14 +17,13 @@ src/
 
 app/                   # Next.js App Router
 ├── page.tsx          # Main page component (refactored)
-├── page-old.tsx      # Original monolithic component (backup)
 ├── layout.tsx        # App layout
 └── globals.css       # Global styles
 
 public/               # Static assets
 ```
 
-## 🧩 Component Architecture
+## Component Architecture
 
 ### **Common Components**
 - `Loading.tsx` - Loading states with Pokemon logo
@@ -36,7 +35,7 @@ public/               # Static assets
 - `PokemonGrid.tsx` - Grid layout with infinite scroll
 - `PokemonDetails.tsx` - Detailed Pokemon information panel
 
-## 🎣 Custom Hooks
+## Custom Hooks
 
 - `usePokemonList` - Manages Pokemon data fetching with infinite scroll
 - `useDebounce` - Debounces search input for performance
@@ -44,17 +43,17 @@ public/               # Static assets
 - `useKeyboardShortcuts` - Manages keyboard shortcuts (/, Esc)
 - `usePokemonEvolutions` - Handles evolution chain fetching
 
-## 🛠️ Services
+## Services
 
 - `pokemonApi.ts` - All Pokemon API calls centralized
 - Clean separation of data fetching from UI logic
 
-## 📝 Types
+## Types
 
 - Comprehensive TypeScript definitions for all data structures
 - Type safety throughout the application
 
-## 🎯 Benefits of This Structure
+## Benefits of This Structure
 
 ### **Maintainability**
 - Single Responsibility Principle
