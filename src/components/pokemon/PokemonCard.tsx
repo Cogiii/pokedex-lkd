@@ -1,4 +1,4 @@
-import React from 'react';
+import { FC, useState } from 'react';
 import { Pokemon } from '../../types/pokemon';
 import { TYPE_COLORS } from '../../constants/pokemon';
 import { formatPokemonId, capitalize, getPokemonSprite } from '../../utils/pokemon';
@@ -8,7 +8,7 @@ interface PokemonTypeBadgeProps {
   className?: string;
 }
 
-export const PokemonTypeBadge: React.FC<PokemonTypeBadgeProps> = ({ type, className = '' }) => {
+export const PokemonTypeBadge: FC<PokemonTypeBadgeProps> = ({ type, className = '' }) => {
   const colorClass = TYPE_COLORS[type as keyof typeof TYPE_COLORS] || 'bg-gray-400';
 
   return (
@@ -28,17 +28,24 @@ interface PokemonCardProps {
   isHovered?: boolean;
 }
 
-export const PokemonCard: React.FC<PokemonCardProps> = ({
+export const PokemonCard: FC<PokemonCardProps> = ({
   pokemon,
   onClick,
   onMouseEnter,
   onMouseLeave,
   isHovered = false,
 }) => {
+  const [isCardClick, setIsCardClick] = useState(false);
+
+  const cardClickHandler = () => {
+    onClick(pokemon);
+    setIsCardClick(true);
+  };
+
   return (
     <div
-      className="group flex flex-col items-center justify-center relative cursor-pointer"
-      onClick={() => onClick(pokemon)}
+      className="min-w-[250px] group flex flex-col items-center justify-center relative cursor-pointer"
+      onClick={cardClickHandler}
       onMouseEnter={() => onMouseEnter?.(pokemon.id)}
       onMouseLeave={onMouseLeave}
     >
@@ -49,7 +56,7 @@ export const PokemonCard: React.FC<PokemonCardProps> = ({
             alt={pokemon.name}
             className={`h-[100px] object-contain absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-12 z-10
                         transition-all duration-300
-                        ${isHovered ? 'scale-110 -translate-y-14' : 'scale-100 -translate-y-12'}`}
+                        ${isHovered || isCardClick ? 'scale-110 -translate-y-14' : 'scale-100 -translate-y-12'}`}
           />
 
         ) : (

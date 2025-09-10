@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, use } from 'react';
 import { Pokemon } from '../src/types/pokemon';
 import { API_CONFIG } from '../src/constants/pokemon';
 import { usePokemonList } from '../src/hooks/usePokemonList';
@@ -20,6 +20,7 @@ export default function Pokedex() {
   const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
   const [hoveredPokemonId, setHoveredPokemonId] = useState<number | null>(null);
   const [isReset, setIsReset] = useState(false);
+  const [loadingStateDetails, setLoadingStateDetails] = useState(false);
 
   // Custom hooks
   const { pokemonList, loading, loadingMore, hasMore, loadMore, reset } = usePokemonList();
@@ -102,6 +103,10 @@ export default function Pokedex() {
     }
   }, [debouncedSearchTerm]);
 
+  useEffect(() => {
+    setLoadingStateDetails(loading || !hasMore || debouncedSearchTerm !== '');
+  }, [hasMore, loading, debouncedSearchTerm]);
+
   useKeyboardShortcuts({
     searchTerm,
     onClearSearch: handleSearchReset,
@@ -115,8 +120,8 @@ export default function Pokedex() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="container mx-auto p-4">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <div className="container mx-auto p-4 pb-0">
+        <div className={`flex flex-col lg:flex-row gap-6 ${loadingStateDetails ? 'h-screen' : ''}`}>
           {/* Pokemon List */}
           <div className={`${selectedPokemon ? 'lg:w-2/2' : 'w-full'}`}>
             <SearchBar

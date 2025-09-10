@@ -1,4 +1,4 @@
-import React from 'react';
+import { Fragment, FC } from 'react';
 import Image from 'next/image';
 import { Pokemon, Evolution } from '../../types/pokemon';
 import { PokemonTypeBadge } from './PokemonCard';
@@ -16,7 +16,7 @@ interface PokemonStatsProps {
   stats: Pokemon['stats'];
 }
 
-const PokemonStats: React.FC<PokemonStatsProps> = ({ stats }) => (
+const PokemonStats: FC<PokemonStatsProps> = ({ stats }) => (
   <div className="mb-6">
     <h3 className="text-xl font-bold mb-3 text-gray-800">Base Stats</h3>
     <div className="space-y-2">
@@ -44,7 +44,7 @@ interface PokemonAbilitiesProps {
   abilities: Pokemon['abilities'];
 }
 
-const PokemonAbilities: React.FC<PokemonAbilitiesProps> = ({ abilities }) => (
+const PokemonAbilities: FC<PokemonAbilitiesProps> = ({ abilities }) => (
   <div className="mb-6">
     <h3 className="text-xl font-bold mb-3 text-gray-800">Abilities</h3>
     <div className="flex flex-wrap gap-2">
@@ -66,7 +66,7 @@ interface PokemonEvolutionsProps {
   onEvolutionClick: (evolutionId: number) => void;
 }
 
-const PokemonEvolutions: React.FC<PokemonEvolutionsProps> = ({
+const PokemonEvolutions: FC<PokemonEvolutionsProps> = ({
   evolutions,
   selectedPokemon,
   onEvolutionClick
@@ -79,7 +79,7 @@ const PokemonEvolutions: React.FC<PokemonEvolutionsProps> = ({
       <div className="flex items-center flex-wrap gap-2">
         {evolutions.map((evolution, index) => {
           return (
-            <React.Fragment key={index}>
+            <Fragment key={index}>
               {/* Evolution Item */}
               <div
                 className="flex flex-col ml-2 items-center cursor-pointer transition-transform hover:scale-105"
@@ -115,7 +115,7 @@ const PokemonEvolutions: React.FC<PokemonEvolutionsProps> = ({
               {index < evolutions.length - 1 && (
                 <span className="text-gray-500 text-lg">→</span>
               )}
-            </React.Fragment>
+            </Fragment>
           );
         })}
       </div>
@@ -129,18 +129,18 @@ interface PokemonDetailsProps {
   onEvolutionClick: (evolutionId: number) => void;
 }
 
-export const PokemonDetails: React.FC<PokemonDetailsProps> = ({
+export const PokemonDetails: FC<PokemonDetailsProps> = ({
   pokemon,
   evolutions,
   onEvolutionClick,
 }) => {
   return (
-    <div className="w-[400px] sticky top-30 self-start bg-white rounded-t-4xl shadow-lg p-6 pt-20 flex flex-col h-[100vh]">
+    <div className="w-[400px] sticky top-30 self-start bg-white rounded-t-4xl shadow-lg p-6 pt-20 flex flex-col h-[calc(100vh-7.5rem)]">
       <Image
         src={getPokemonSprite(pokemon)}
         alt={pokemon.name}
-        height={120}
-        width={120}
+        height={100}
+        width={100}
         className="absolute top-[-50px] left-1/2 transform -translate-x-1/2 z-10"
       />
 

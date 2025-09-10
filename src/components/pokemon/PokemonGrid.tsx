@@ -49,7 +49,7 @@ export const PokemonGrid: React.FC<PokemonGridProps> = ({
 
   return (
     <>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-4 gap-y-20 pt-5">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4 gap-y-20 mt-15">
         {pokemon.map((poke) => (
           <PokemonCard
             key={poke.id}
